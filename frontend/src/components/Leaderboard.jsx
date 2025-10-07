@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient';
 
 const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) => {
   const [showNicknameInput, setShowNicknameInput] = useState(showScoreInput);
   const [nickname, setNickname] = useState('');
-  const [leaderboard, setLeaderboard] = useState([
-    { rank: 1, nickname: '줄줄이', score: 1000 },
-    { rank: 2, nickname: '민허', score: 500 },
-    { rank: 3, nickname: '민지민지민지', score: 300 },
-  ]);
+  const [leaderboard, setLeaderboard] = useState([]);
 
   const handleSubmit = () => {
     if (!nickname.trim()) {
@@ -34,6 +31,8 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
     }
   };
 
+  const isMobile = window.innerWidth < 768;
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -41,49 +40,47 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      padding: '40px 20px',
+      padding: isMobile ? '20px 10px' : '40px 20px',
       fontFamily: 'Arial, sans-serif'
     }}>
       <div style={{
         background: 'white',
-        borderRadius: '30px',
-        padding: '40px',
+        borderRadius: isMobile ? '20px' : '30px',
+        padding: isMobile ? '20px' : '40px',
         maxWidth: '600px',
         width: '100%',
         boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
       }}>
-        {/* 헤더 */}
-        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? '20px' : '30px' }}>
           <h1 style={{
-            fontSize: '42px',
+            fontSize: isMobile ? '28px' : '42px',
             color: '#667eea',
             margin: '0 0 10px 0',
             fontWeight: 'bold'
           }}>
-            🏆 Hamster Tower Ranking
+            🏆 Ranking
           </h1>
-          <p style={{ color: '#666', fontSize: '16px', margin: 0 }}>
-            Something special might happen to our champion...? 🐹
-          </p>
+          <p style={{ color: '#666', fontSize: isMobile ? '14px' : '16px', margin: 0 }}>
+            Something special might happen to our champion?</p>
         </div>
 
         {showScoreInput && showNicknameInput && (
           <div style={{
             background: '#f8f9ff',
-            padding: '30px',
-            borderRadius: '20px',
-            marginBottom: '30px',
+            padding: isMobile ? '20px' : '30px',
+            borderRadius: isMobile ? '15px' : '20px',
+            marginBottom: isMobile ? '20px' : '30px',
             border: '3px solid #667eea'
           }}>
             <h3 style={{
               color: '#667eea',
               margin: '0 0 10px 0',
-              fontSize: '24px'
+              fontSize: isMobile ? '20px' : '24px'
             }}>
               🎮 Game Over!
             </h3>
             <p style={{
-              fontSize: '32px',
+              fontSize: isMobile ? '24px' : '32px',
               fontWeight: 'bold',
               color: '#333',
               margin: '10px 0 20px 0'
@@ -95,12 +92,12 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
               placeholder="Enter your name..."
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               maxLength={12}
               style={{
                 width: '100%',
-                padding: '15px',
-                fontSize: '18px',
+                padding: isMobile ? '12px' : '15px',
+                fontSize: isMobile ? '16px' : '18px',
                 border: '2px solid #ddd',
                 borderRadius: '10px',
                 marginBottom: '15px',
@@ -115,8 +112,8 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
                 border: 'none',
-                padding: '15px',
-                fontSize: '18px',
+                padding: isMobile ? '12px' : '15px',
+                fontSize: isMobile ? '16px' : '18px',
                 borderRadius: '10px',
                 cursor: 'pointer',
                 fontWeight: 'bold',
@@ -130,25 +127,24 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
           </div>
         )}
 
-        {/* 리더보드 테이블 */}
         <div style={{
           background: '#f8f9ff',
-          borderRadius: '20px',
+          borderRadius: isMobile ? '15px' : '20px',
           overflow: 'hidden'
         }}>
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '60px 1fr 100px',
-            gap: '15px',
-            padding: '20px 25px',
+            gridTemplateColumns: isMobile ? '50px 1fr 80px' : '60px 1fr 100px',
+            gap: isMobile ? '10px' : '15px',
+            padding: isMobile ? '15px 15px' : '20px 25px',
             background: '#667eea',
             color: 'white',
             fontWeight: 'bold',
-            fontSize: '16px'
+            fontSize: isMobile ? '14px' : '16px'
           }}>
             <div>Ranking</div>
-            <div>Name</div>
+            <div style={{ textAlign: 'middle' }}>Name</div>
             <div style={{ textAlign: 'right' }}>Score</div>
           </div>
 
@@ -161,9 +157,9 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
                 key={index}
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '60px 1fr 100px',
-                  gap: '15px',
-                  padding: '20px 25px',
+                  gridTemplateColumns: isMobile ? '50px 1fr 80px' : '60px 1fr 100px',
+                  gap: isMobile ? '10px' : '15px',
+                  padding: isMobile ? '15px 15px' : '20px 25px',
                   borderBottom: index < leaderboard.length - 1 ? '1px solid #e0e0e0' : 'none',
                   background: isNewEntry ? '#fff9e6' : 'white',
                   transition: 'background 0.3s',
@@ -173,21 +169,24 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
                 <div style={{
                   fontWeight: 'bold',
                   color: entry.rank <= 3 ? '#667eea' : '#666',
-                  fontSize: '18px'
+                  fontSize: isMobile ? '14px' : '18px'
                 }}>
                   {medalEmoji} {entry.rank}
                 </div>
                 <div style={{
-                  fontSize: '18px',
+                  fontSize: isMobile ? '14px' : '18px',
                   color: '#333',
-                  fontWeight: isNewEntry ? 'bold' : 'normal'
+                  fontWeight: isNewEntry ? 'bold' : 'normal',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
                 }}>
                   {entry.nickname}
-                  {isNewEntry && <span style={{ marginLeft: '10px', color: '#667eea' }}>✨ NEW</span>}
+                  {isNewEntry && <span style={{ marginLeft: isMobile ? '5px' : '10px', color: '#667eea' }}>✨{isMobile ? '' : ' NEW'}</span>}
                 </div>
                 <div style={{
                   textAlign: 'right',
-                  fontSize: '18px',
+                  fontSize: isMobile ? '14px' : '18px',
                   fontWeight: 'bold',
                   color: '#667eea'
                 }}>

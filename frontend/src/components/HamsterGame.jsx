@@ -56,9 +56,27 @@ const HamsterGame = () => {
           keysPressed.current.down = false;
         }
     };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+
+    const handleTouchStart = (e) => {
+      const touch = e.touches[0];
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const touchX = touch.clientX - rect.left;
+      const canvasWidth = rect.width;
+
+      if (touchX < canvasWidth / 2) {
+        keysPressed.current.left = true;
+      } else {
+        keysPressed.current.right = true;
+      }
+      keysPressed.current.down = true;
+    };
+
+    const handleTouchEnd = () => {
+      keysPressed.current.left = false;
+      keysPressed.current.right = false;
+      keysPressed.current.down = false;
+    };
 
     const Matter = window.Matter;
     const Engine = Matter.Engine;
@@ -68,8 +86,18 @@ const HamsterGame = () => {
     const Events = Matter.Events;
 
     const canvas = canvasRef.current;
-    const width = 600;
-    const height = 800;
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    if (canvas) {
+      canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+      canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    }
+
+    const isMobile = window.innerWidth < 768;
+    const width = isMobile ? Math.min(window.innerWidth - 40, 400) : 600;
+    const height = isMobile ? Math.min(window.innerHeight - 100, 600) : 800;
 
     const engine = Engine.create();
     engine.gravity.y = 0.5; 
@@ -171,8 +199,8 @@ const HamsterGame = () => {
         render: {
           sprite: {
           texture: randomTexture,
-          xScale: 0.15,
-          yScale: 0.15
+          xScale: 0.1,
+          yScale: 0.1
           }
         }
       });
@@ -188,6 +216,11 @@ const HamsterGame = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+
+      if (canvas) {
+        canvas.removeEventListener('touchstart', handleTouchStart);
+        canvas.removeEventListener('touchend', handleTouchEnd);
+      }
 
       if (dropIntervalRef.current) {
         clearInterval(dropIntervalRef.current);
@@ -253,33 +286,36 @@ const HamsterGame = () => {
       fontFamily: 'Arial, sans-serif'
     }}>
       {!gameStarted && !gameOver && (
-        <div style={{
+        <div className="start-screen" style={{
           background: 'white',
-          padding: '60px',
+          padding: window.innerWidth < 768 ? '30px 20px' : '60px',
           borderRadius: '20px',
           boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-          textAlign: 'center'
+          textAlign: 'center',
+          maxWidth: '90%',
+          margin: '20px'
         }}>
-          <h1 style={{ 
-            fontSize: '48px', 
-            color: '#667eea', 
-            marginBottom: '30px',
+          <h1 style={{
+            fontSize: window.innerWidth < 768 ? '32px' : '48px',
+            color: '#667eea',
+            marginBottom: window.innerWidth < 768 ? '15px' : '30px',
             fontWeight: 'bold'
           }}>
             Hamster Tower Game 🐹
           </h1>
-          <p style={{ 
-            fontSize: '20px', 
-            color: '#666', 
-            marginBottom: '40px' 
+          <p style={{
+            fontSize: window.innerWidth < 768 ? '16px' : '20px',
+            color: '#666',
+            marginBottom: window.innerWidth < 768 ? '25px' : '40px'
           }}>
             Hamster friends are falling down!<br/>
             Help them to be stacked and fall safe!<br/>
           </p>
-          
+
           <div style={{
             display: 'flex',
-            gap: '20px',
+            flexDirection: window.innerWidth < 768 ? 'column' : 'row',
+            gap: window.innerWidth < 768 ? '12px' : '20px',
             justifyContent: 'center'
           }}>
             <button
@@ -288,33 +324,35 @@ const HamsterGame = () => {
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
                 border: 'none',
-                padding: '20px 50px',
-                fontSize: '24px',
+                padding: window.innerWidth < 768 ? '15px 30px' : '20px 50px',
+                fontSize: window.innerWidth < 768 ? '18px' : '24px',
                 borderRadius: '30px',
                 cursor: 'pointer',
                 fontWeight: 'bold',
                 transition: 'transform 0.2s',
-                boxShadow: '0 5px 15px rgba(0,0,0,0.2)'
+                boxShadow: '0 5px 15px rgba(0,0,0,0.2)',
+                width: window.innerWidth < 768 ? '100%' : 'auto'
               }}
               onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
               onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
             >
               🎮 Game Start
             </button>
-            
+
             <button
               onClick={showLeaderboardOnly}
               style={{
                 background: 'white',
                 color: '#667eea',
                 border: '3px solid #667eea',
-                padding: '20px 40px',
-                fontSize: '24px',
+                padding: window.innerWidth < 768 ? '15px 30px' : '20px 40px',
+                fontSize: window.innerWidth < 768 ? '18px' : '24px',
                 borderRadius: '30px',
                 cursor: 'pointer',
                 fontWeight: 'bold',
                 transition: 'all 0.2s',
-                boxShadow: '0 5px 15px rgba(0,0,0,0.1)'
+                boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
+                width: window.innerWidth < 768 ? '100%' : 'auto'
               }}
               onMouseOver={(e) => {
                 e.target.style.transform = 'scale(1.05)';
