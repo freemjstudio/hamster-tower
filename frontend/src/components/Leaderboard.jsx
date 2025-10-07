@@ -1,32 +1,92 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../supabaseClient';
 
 const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) => {
   const [showNicknameInput, setShowNicknameInput] = useState(showScoreInput);
   const [nickname, setNickname] = useState('');
   const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSubmit = () => {
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
+  const fetchLeaderboard = async() => {
+    try {
+        setLoading(true);
+
+        const { data: allScores, error } = await supabase
+              .from('score')
+              .select('nickname, score')
+              .order('score', { ascending: false });
+
+        if (error) {
+          console.error('Error loading score:', error);
+          return;
+        }
+
+        const topScoresByNickname = {};
+
+        allScores.forEach(record => {
+          if (!topScoresByNickname[record.nickname] || 
+            record.score > topScoresByNickname[record.nickname].score) {
+              topScoresByNickname[record.nickname] = {
+                nickname: record.nickname,
+                score: record.score
+              };
+            }
+        });
+
+        const sortedRanking = Object.values(topScoresByNickname)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 20)
+            .map((entry, index) => ({
+              ...entry,
+              rank: index + 1
+            }));
+
+        setLeaderboard(sortedRanking);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      alert('An error occurred while loading leaderboard data.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
     if (!nickname.trim()) {
       alert('Enter your nickname!');
       return;
     }
 
-    const newEntry = {
-      rank: 0,
-      nickname: nickname,
-      score: score
-    };
+    try {
+      const { data, error } = await supabase
+        .from('score')
+        .insert([
+          {
+            nickname: nickname.trim(),
+            score: score
+          }
+        ])
+        .select();
 
-    const updatedLeaderboard = [...leaderboard, newEntry]
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10)
-      .map((entry, index) => ({ ...entry, rank: index + 1 }));
+      if (error) {
+          console.error('Error saving score:', error);
+          alert('Failed to save score. Please try again.');
+          return;
+      }
 
-    setLeaderboard(updatedLeaderboard);
-    setShowNicknameInput(false);
-
-    if (onSaveScore) {
+      console.log('Score saved successfully:', data);
+      await fetchLeaderboard();
+      setShowNicknameInput(false);
+      if (onSaveScore) {
       onSaveScore(nickname, score);
+    }
+
+    } catch (error) {
+      console.error("Error:", error);
+      alert('An error occurred while saving the score.');
     }
   };
 
@@ -60,7 +120,8 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
             🏆 Ranking
           </h1>
           <p style={{ color: '#666', fontSize: isMobile ? '14px' : '16px', margin: 0 }}>
-            Something special might happen to our champion?🐹</p>
+            Something special might happen to our champion?🐹
+          </p>
         </div>
 
         {showScoreInput && showNicknameInput && (
@@ -131,7 +192,6 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
           borderRadius: isMobile ? '15px' : '20px',
           overflow: 'hidden'
         }}>
-
           <div style={{
             display: 'grid',
             gridTemplateColumns: isMobile ? '50px 1fr 80px' : '60px 1fr 100px',
@@ -147,53 +207,73 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
             <div style={{ textAlign: 'right' }}>Score</div>
           </div>
 
-          {leaderboard.map((entry, index) => {
-            const isNewEntry = entry.nickname === nickname && !showNicknameInput;
-            const medalEmoji = entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : '';
+          {loading ? (
+            <div style={{
+              padding: '40px',
+              textAlign: 'center',
+              color: '#666',
+              fontSize: isMobile ? '14px' : '16px'
+            }}>
+              Loading leaderboard...
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <div style={{
+              padding: '40px',
+              textAlign: 'center',
+              color: '#666',
+              fontSize: isMobile ? '14px' : '16px'
+            }}>
+              No scores yet. Be the first! 🎮
+            </div>
+          ) : (
+            leaderboard.map((entry, index) => {
+              const isNewEntry = entry.nickname === nickname && !showNicknameInput;
+              const medalEmoji = entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : '';
 
-            return (
-              <div
-                key={index}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: isMobile ? '50px 1fr 80px' : '60px 1fr 100px',
-                  gap: isMobile ? '10px' : '15px',
-                  padding: isMobile ? '15px 15px' : '20px 25px',
-                  borderBottom: index < leaderboard.length - 1 ? '1px solid #e0e0e0' : 'none',
-                  background: isNewEntry ? '#fff9e6' : 'white',
-                  transition: 'background 0.3s',
-                  animation: isNewEntry ? 'highlight 0.5s ease' : 'none'
-                }}
-              >
-                <div style={{
-                  fontWeight: 'bold',
-                  color: entry.rank <= 3 ? '#667eea' : '#666',
-                  fontSize: isMobile ? '14px' : '18px'
-                }}>
-                  {medalEmoji} {entry.rank}
+              return (
+                <div
+                  key={`${entry.nickname}-${index}`}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: isMobile ? '50px 1fr 80px' : '60px 1fr 100px',
+                    gap: isMobile ? '10px' : '15px',
+                    padding: isMobile ? '15px 15px' : '20px 25px',
+                    borderBottom: index < leaderboard.length - 1 ? '1px solid #e0e0e0' : 'none',
+                    background: isNewEntry ? '#fff9e6' : 'white',
+                    transition: 'background 0.3s',
+                    animation: isNewEntry ? 'highlight 0.5s ease' : 'none'
+                  }}
+                >
+                  <div style={{
+                    fontWeight: 'bold',
+                    color: entry.rank <= 3 ? '#667eea' : '#666',
+                    fontSize: isMobile ? '14px' : '18px'
+                  }}>
+                    {medalEmoji} {entry.rank}
+                  </div>
+                  <div style={{
+                    fontSize: isMobile ? '14px' : '18px',
+                    color: '#333',
+                    fontWeight: isNewEntry ? 'bold' : 'normal',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {entry.nickname}
+                    {isNewEntry && <span style={{ marginLeft: isMobile ? '5px' : '10px', color: '#667eea' }}>✨{isMobile ? '' : ' NEW'}</span>}
+                  </div>
+                  <div style={{
+                    textAlign: 'right',
+                    fontSize: isMobile ? '14px' : '18px',
+                    fontWeight: 'bold',
+                    color: '#667eea'
+                  }}>
+                    {entry.score.toLocaleString()}
+                  </div>
                 </div>
-                <div style={{
-                  fontSize: isMobile ? '14px' : '18px',
-                  color: '#333',
-                  fontWeight: isNewEntry ? 'bold' : 'normal',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>
-                  {entry.nickname}
-                  {isNewEntry && <span style={{ marginLeft: isMobile ? '5px' : '10px', color: '#667eea' }}>✨{isMobile ? '' : ' NEW'}</span>}
-                </div>
-                <div style={{
-                  textAlign: 'right',
-                  fontSize: isMobile ? '14px' : '18px',
-                  fontWeight: 'bold',
-                  color: '#667eea'
-                }}>
-                  {entry.score.toLocaleString()}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         <button

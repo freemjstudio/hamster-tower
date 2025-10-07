@@ -384,7 +384,6 @@ const HamsterGame = () => {
             }}
           />
           
-          {/* UI 오버레이 */}
           <div style={{
             position: 'absolute',
             top: window.innerWidth < 768 ? '10px' : '20px',
