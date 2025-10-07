@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import React, { useState } from 'react';
 
 const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) => {
   const [showNicknameInput, setShowNicknameInput] = useState(showScoreInput);
@@ -61,7 +60,7 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
             🏆 Ranking
           </h1>
           <p style={{ color: '#666', fontSize: isMobile ? '14px' : '16px', margin: 0 }}>
-            Something special might happen to our champion?</p>
+            Something special might happen to our champion?🐹</p>
         </div>
 
         {showScoreInput && showNicknameInput && (
