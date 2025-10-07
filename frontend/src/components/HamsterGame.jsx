@@ -184,18 +184,21 @@ const HamsterGame = () => {
     dropIntervalRef.current = setInterval(() => {
       if (gameOverRef.current) return;
       if (!engineRef.current) return;
-      
-      const x = 250 + Math.random() * 100; 
-      const width = 180 + Math.random() * 40; 
-      const height = 50 + Math.random() * 10; 
+
+      const centerX = width / 2;
+      const rangeX = width * 0.15;
+      const x = centerX - rangeX + Math.random() * (rangeX * 2);
+
+      const hamsterWidth = 180 + Math.random() * 40;
+      const hamsterHeight = 50 + Math.random() * 10;
       const textures = [hamsterGray, hamsterPink, hamsterYellow];
       const randomTexture = textures[Math.floor(Math.random() * textures.length)];
 
-      const hamster = Bodies.rectangle(x, 50, width, height, {
-        chamfer: { radius: height / 2 },
-        restitution: 0.1, 
-        friction: 0.8, 
-        frictionAir: 0.02, 
+      const hamster = Bodies.rectangle(x, 50, hamsterWidth, hamsterHeight, {
+        chamfer: { radius: hamsterHeight / 2 },
+        restitution: 0.1,
+        friction: 0.8,
+        frictionAir: 0.02,
         render: {
           sprite: {
           texture: randomTexture,
@@ -384,19 +387,19 @@ const HamsterGame = () => {
           {/* UI 오버레이 */}
           <div style={{
             position: 'absolute',
-            top: '20px',
-            left: '20px',
-            right: '20px',
+            top: window.innerWidth < 768 ? '10px' : '20px',
+            left: window.innerWidth < 768 ? '10px' : '20px',
+            right: window.innerWidth < 768 ? '10px' : '20px',
             display: 'flex',
             justifyContent: 'space-between',
             pointerEvents: 'none'
           }}>
             <div style={{
               background: 'rgba(255,255,255,0.95)',
-              padding: '15px 25px',
-              borderRadius: '15px',
+              padding: window.innerWidth < 768 ? '10px 15px' : '15px 25px',
+              borderRadius: window.innerWidth < 768 ? '10px' : '15px',
               boxShadow: '0 5px 15px rgba(0,0,0,0.2)',
-              fontSize: '24px',
+              fontSize: window.innerWidth < 768 ? '16px' : '24px',
               fontWeight: 'bold',
               color: '#667eea'
             }}>
@@ -404,10 +407,10 @@ const HamsterGame = () => {
             </div>
             <div style={{
               background: 'rgba(255,255,255,0.95)',
-              padding: '15px 25px',
-              borderRadius: '15px',
+              padding: window.innerWidth < 768 ? '10px 15px' : '15px 25px',
+              borderRadius: window.innerWidth < 768 ? '10px' : '15px',
               boxShadow: '0 5px 15px rgba(0,0,0,0.2)',
-              fontSize: '24px',
+              fontSize: window.innerWidth < 768 ? '16px' : '24px',
               fontWeight: 'bold',
               color: '#667eea'
             }}>
@@ -422,23 +425,25 @@ const HamsterGame = () => {
               left: '50%',
               transform: 'translate(-50%, -50%)',
               background: 'white',
-              padding: '40px',
-              borderRadius: '20px',
+              padding: window.innerWidth < 768 ? '25px 20px' : '40px',
+              borderRadius: window.innerWidth < 768 ? '15px' : '20px',
               boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
-              textAlign: 'center'
+              textAlign: 'center',
+              width: window.innerWidth < 768 ? '80%' : 'auto',
+              maxWidth: window.innerWidth < 768 ? '300px' : 'none'
             }}>
-              <h2 style={{ 
-                color: '#667eea', 
-                fontSize: '36px', 
-                marginBottom: '20px',
+              <h2 style={{
+                color: '#667eea',
+                fontSize: window.innerWidth < 768 ? '28px' : '36px',
+                marginBottom: window.innerWidth < 768 ? '15px' : '20px',
                 fontWeight: 'bold'
               }}>
                 Game Over!
               </h2>
-              <p style={{ 
-                fontSize: '24px', 
-                marginBottom: '30px', 
-                color: '#333' 
+              <p style={{
+                fontSize: window.innerWidth < 768 ? '20px' : '24px',
+                marginBottom: window.innerWidth < 768 ? '20px' : '30px',
+                color: '#333'
               }}>
                 Your Score: {score}
               </p>
@@ -448,8 +453,8 @@ const HamsterGame = () => {
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   color: 'white',
                   border: 'none',
-                  padding: '15px 40px',
-                  fontSize: '20px',
+                  padding: window.innerWidth < 768 ? '12px 30px' : '15px 40px',
+                  fontSize: window.innerWidth < 768 ? '16px' : '20px',
                   borderRadius: '30px',
                   cursor: 'pointer',
                   transition: 'transform 0.2s',
