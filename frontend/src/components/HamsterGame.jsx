@@ -203,7 +203,9 @@ const HamsterGame = () => {
           sprite: {
           texture: randomTexture,
           xScale: 0.1,
-          yScale: 0.1
+          yScale: 0.1,
+          xOffset: 0,
+          yOffset: 0
           }
         }
       });
