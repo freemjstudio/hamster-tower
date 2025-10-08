@@ -211,12 +211,13 @@ const HamsterGame = () => {
         if (((bodyA.label === 'hamster' && (bodyB === leftWall || bodyB === rightWall))) ||
         ((bodyB.label === 'hamster' && (bodyA === leftWall || bodyA === rightWall)))) {
             const hamster = bodyA.label === 'hamster' ? bodyA : bodyB;
+            const isLanded = Math.hypot(hamster.velocity.x, hamster.velocity.y) < 0.5;
 
-            if (hamster !== currentHamsterRef.current) {
+            if (hamster !== currentHamsterRef.current && isLanded) {
               gameOverRef.current = true;
               if (dropIntervalRef.current) clearInterval(dropIntervalRef.current);
               setGameOver(true);
-              Matter.Runner.stop(engineRef.current);
+              Matter.Runner.stop(runnerRef.current);
             }
           }
 
