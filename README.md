@@ -5,5 +5,5 @@
 ### Let's play!
 https://hamster-tower.vercel.app/
 
+<img width="652" height="702" alt="image" src="https://github.com/user-attachments/assets/95cc382c-7d5e-4ceb-a5f7-424a651ecd70" />
 
-<img width="665" height="855" alt="image" src="https://github.com/user-attachments/assets/fa5ca657-5625-47ae-9d90-8c5af845dbd7" />
