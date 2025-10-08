@@ -247,8 +247,6 @@ const HamsterGame = () => {
           currentHamsterRef.current = null;
         }   
     })
-
-    // Matter.Runner.run(engine);
     
     const runner = Matter.Runner.create();
     runnerRef.current = runner;
