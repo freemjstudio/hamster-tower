@@ -115,22 +115,44 @@ const HamsterGame = () => {
     });
     renderRef.current = render;
 
+    const updateCamera = () => {
+      if (hamstersRef.current.length === 0) return;
+      let highestY = height;
+      hamstersRef.current.forEach(hamster => {
+        if (hamster.position.y < highestY) {
+          highestY = hamster.position.y;
+        }
+      });
+
+      const topThreshold = height * 0.4;
+      if (highestY < topThreshold) {
+        const targetY = highestY - height * 0.35; 
+        render.bounds.min.y = targetY;
+        render.bounds.max.y = targetY + height;
+      }
+    };
+
+
     const ground = Bodies.rectangle(width / 2, height - 10, width, 20, {
       isStatic: true,
       render: { fillStyle: '#667eea' }
     });
     
-    const leftWall = Bodies.rectangle(10, height / 2, 20, height, {
+    const wallHeight = height * 10; 
+
+    const leftWall = Bodies.rectangle(10, 0, 20, wallHeight, {
       isStatic: true,
       render: { fillStyle: '#667eea' }
     });
 
-    const rightWall = Bodies.rectangle(width - 10, height / 2, 20, height, {
+    const rightWall = Bodies.rectangle(width - 10, 0, 20, wallHeight, {
       isStatic: true,
       render: { fillStyle: '#667eea' }
     });
 
     World.add(engine.world, [ground, leftWall, rightWall]);
+
+    Events.on(engine, 'afterUpdate', updateCamera);
 
     Events.on(engine, 'collisionStart', (event) => {
       const pairs = event.pairs;
@@ -174,38 +196,40 @@ const HamsterGame = () => {
       if (keysPressed.current.right) Matter.Body.applyForce(currentHamster, currentHamster.position, { x: horizontalForce, y: 0 });
       if (keysPressed.current.down) Matter.Body.applyForce(currentHamster, currentHamster.position, { x: 0, y: fastFallForce });
       
-      if (currentHamster.position.y > height - 100) currentHamsterRef.current = null; 
-  
+      const currentBottomY = renderRef.current.bounds.max.y;
+    if (currentHamster.position.y > currentBottomY - 100) currentHamsterRef.current = null;
+
     })
 
     Matter.Runner.run(engine);
     Render.run(render);
 
-    dropIntervalRef.current = setInterval(() => {
+    const dropHamster = () => {
       if (gameOverRef.current) return;
       if (!engineRef.current) return;
 
       const centerX = width / 2;
       const rangeX = width * 0.15;
       const x = centerX - rangeX + Math.random() * (rangeX * 2);
+      const currentTopY = renderRef.current.bounds.min.y;
+      const spawnY = currentTopY + 50;
 
       const hamsterWidth = 180 + Math.random() * 40;
       const hamsterHeight = 50 + Math.random() * 10;
       const textures = [hamsterGray, hamsterPink, hamsterYellow];
       const randomTexture = textures[Math.floor(Math.random() * textures.length)];
 
-      const hamster = Bodies.rectangle(x, 50, hamsterWidth, hamsterHeight, {
+      const hamster = Bodies.rectangle(x, spawnY, hamsterWidth, hamsterHeight, {
         chamfer: { radius: hamsterHeight / 2 },
-        restitution: 0.1,
-        friction: 0.8,
+        restitution: 0.2,
+        friction: 0.7,
         frictionAir: 0.02,
         render: {
           sprite: {
           texture: randomTexture,
           xScale: 0.1,
           yScale: 0.1,
-          xOffset: 0,
-          yOffset: 0
+          yOffset: -0.1
           }
         }
       });
@@ -215,8 +239,21 @@ const HamsterGame = () => {
       hamstersRef.current.push(hamster);
       currentHamsterRef.current = hamster;
 
-      setHamsterCount(prev => prev + 1);
-    }, 1700); 
+      setHamsterCount(prev => {
+        const newCount = prev + 1;
+        const level = Math.floor(newCount / 10);
+        const newInterval = Math.max(500, 2000 - level * 150);
+
+        if (dropIntervalRef.current) {
+          clearInterval(dropIntervalRef.current);
+        }
+        dropIntervalRef.current = setInterval(dropHamster, newInterval);
+
+        return newCount;
+      });
+    };
+
+    dropIntervalRef.current = setInterval(dropHamster, 2000);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
