@@ -19,6 +19,7 @@ const HamsterGame = () => {
   const gameOverRef = useRef(false);
   const dropIntervalRef = useRef(null);
   const [isFromGame, setIsFromGame] = useState(false); 
+  const runnerRef = useRef(null);
 
   useEffect(() => {
     if (gameOver) {
@@ -96,8 +97,9 @@ const HamsterGame = () => {
     }
 
     const isMobile = window.innerWidth < 768;
-    const width = isMobile ? Math.min(window.innerWidth - 40, 400) : 600;
-    const height = isMobile ? Math.min(window.innerHeight - 100, 600) : 800;
+
+    const width = Math.min(window.innerWidth * (isMobile ? 0.9 : 0.6), 600);
+    const height = Math.min(window.innerHeight * (isMobile ? 0.75 : 0.85), 800);
 
     const engine = Engine.create();
     engine.gravity.y = 0.5; 
@@ -110,7 +112,8 @@ const HamsterGame = () => {
         width: width,
         height: height,
         wireframes: false,
-        background: '#f0f0f0'
+        background: '#f0f0f0',
+        pixelRatio: window.devicePixelRatio 
       }
     });
     renderRef.current = render;
@@ -148,18 +151,36 @@ const HamsterGame = () => {
       isStatic: true,
       render: { fillStyle: '#667eea' }
     });
-    
-    const wallHeight = height * 10; 
 
-    const leftWall = Bodies.rectangle(10, 0, 20, wallHeight, {
+    const wallHeight = height * 30; 
+    const wallThickness = Math.max(width * 0.04, 20); 
+    const leftWall = Bodies.rectangle(
+      wallThickness / 2,      
+      height / 2,              
+      wallThickness,           
+      wallHeight,
+      {
+        isStatic: true,
+        render: {
+          fillStyle: '#667eea', 
+          visible: true        
+      }
+    }
+  );
+  
+  const rightWall = Bodies.rectangle(
+    width - wallThickness / 2,
+    height / 2,
+    wallThickness,
+    wallHeight,
+    {
       isStatic: true,
-      render: { fillStyle: '#667eea' }
-    });
-
-    const rightWall = Bodies.rectangle(width - 10, 0, 20, wallHeight, {
-      isStatic: true,
-      render: { fillStyle: '#667eea' }
-    });
+      render: {
+        fillStyle: '#667eea',
+        visible: true
+    }
+  }
+);
 
     World.add(engine.world, [ground, leftWall, rightWall]);
 
@@ -221,12 +242,17 @@ const HamsterGame = () => {
       if (keysPressed.current.right) Matter.Body.applyForce(currentHamster, currentHamster.position, { x: horizontalForce, y: 0 });
       if (keysPressed.current.down) Matter.Body.applyForce(currentHamster, currentHamster.position, { x: 0, y: fastFallForce });
       
-      const currentBottomY = renderRef.current.bounds.max.y;
-    if (currentHamster.position.y > currentBottomY - 100) currentHamsterRef.current = null;
-
+      const boundsBottom = renderRef.current.bounds.max.y;
+      if (currentHamster.position.y > boundsBottom + 120 && Math.hypot(currentHamster.velocity.x, currentHamster.velocity.y) < 0.15) {
+          currentHamsterRef.current = null;
+        }   
     })
 
-    Matter.Runner.run(engine);
+    // Matter.Runner.run(engine);
+    
+    const runner = Matter.Runner.create();
+    runnerRef.current = runner;
+    Matter.Runner.run(runnerRef.current, engine);
     Render.run(render);
 
     const dropHamster = () => {
