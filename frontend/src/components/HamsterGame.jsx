@@ -25,7 +25,7 @@ const HamsterGame = () => {
       setTimeout(() => {
         setIsFromGame(true);
         setShowLeaderboard(true);
-      }, 4000)
+      }, 5000)
     }
   }, [gameOver]);
 
@@ -129,7 +129,6 @@ const HamsterGame = () => {
       if (stackHeight < height * 0.35 || hamstersRef.current.length < 9) return;
 
       const currentCenterY = currentTop + height / 2;
-
       const smoothing = 0.01; 
       const targetCenterY = highestHamsterY + height * 0.15;
       const newCenterY = currentCenterY + (targetCenterY - currentCenterY) * smoothing;
@@ -144,7 +143,6 @@ const HamsterGame = () => {
       });
 
     };
-
 
     const ground = Bodies.rectangle(width / 2, height - 10, width, 20, {
       isStatic: true,
@@ -195,10 +193,10 @@ const HamsterGame = () => {
 
             if (hamster !== currentHamsterRef.current) {
               gameOverRef.current = true;
+              if (dropIntervalRef.current) clearInterval(dropIntervalRef.current);
+              setGameOver(true);
+              Matter.Runner.stop(engineRef.current);
             }
-            if (dropIntervalRef.current) clearInterval(dropIntervalRef.current);
-            setGameOver(true);
-            Matter.Runner.stop(engineRef.current);
           }
 
         if (bodyA.label === 'hamster' && bodyB.label === 'hamster') {;
