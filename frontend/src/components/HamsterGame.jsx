@@ -116,20 +116,30 @@ const HamsterGame = () => {
     renderRef.current = render;
 
     const updateCamera = () => {
-      if (hamstersRef.current.length === 0) return;
-      let highestY = height;
-      hamstersRef.current.forEach(hamster => {
-        if (hamster.position.y < highestY) {
-          highestY = hamster.position.y;
-        }
+      if (!hamstersRef.current.length || hamstersRef.current.length < 10) return;
+
+      const { bounds, options } = render;
+      const currentTop = bounds.min.y;
+      const height = options.height;
+      
+      const highestY = Math.min(...hamstersRef.current.map(h => h.position.y));
+
+      const desiredCenterY = highestY + height * 0.35; 
+      const currentCenterY = currentTop + height / 2;
+
+      const smoothing = 0.08; 
+      const newCenterY = currentCenterY + (desiredCenterY - currentCenterY) * smoothing;
+
+      const newTop = newCenterY - height / 2;
+      bounds.min.y = newTop;
+      bounds.max.y = newTop + height;
+
+
+      Matter.Render.lookAt(render, {
+        min: bounds.min,
+        max: bounds.max
       });
 
-      const topThreshold = height * 0.4;
-      if (highestY < topThreshold) {
-        const targetY = highestY - height * 0.35; 
-        render.bounds.min.y = targetY;
-        render.bounds.max.y = targetY + height;
-      }
     };
 
 
@@ -158,10 +168,13 @@ const HamsterGame = () => {
       const pairs = event.pairs;
 
       for (let pair of pairs) {
-        if ((pair.bodyA === ground && pair.bodyB.label === 'hamster') ||
-            (pair.bodyB === ground && pair.bodyA.label === 'hamster')) {
+        const bodyA = pair.bodyA;
+        const bodyB = pair.bodyB;
 
-          const hamster = pair.bodyA.label === 'hamster' ? pair.bodyA : pair.bodyB;
+        if ((bodyA === ground && bodyB.label === 'hamster') ||
+            (bodyB === ground && bodyA.label === 'hamster')) {
+
+          const hamster = bodyA.label === 'hamster' ? bodyA : bodyB;
 
           if (hamstersRef.current[0] !== hamster) {
             gameOverRef.current = true;
@@ -172,6 +185,19 @@ const HamsterGame = () => {
             Matter.Runner.stop(engineRef.current);
           }
         }
+
+        if (((bodyA.label === 'hamster' && bodyB === leftWall || bodyB === rightWall)) || 
+        ((bodyB.label === 'hamster' && (bodyA === leftWall) || bodyA === rightWall))) {
+            const hamster = bodyA.label === 'hamster' ? bodyA : bodyB;
+
+            if (hamster != currentHamsterRef.current) {
+              gameOverRef.current = true;
+            }
+            if (dropIntervalRef.current) clearInterval(dropIntervalRef.current);
+            setGameOver(true);
+            Matter.Runner.stop(engineRef.current);
+          }
+
         if (pair.bodyA.label === 'hamster' && pair.bodyB.label === 'hamster') {
           const hamsterA = pair.bodyA;
           const hamsterB = pair.bodyB;
