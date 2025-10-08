@@ -116,24 +116,27 @@ const HamsterGame = () => {
     renderRef.current = render;
 
     const updateCamera = () => {
-      if (!hamstersRef.current.length || hamstersRef.current.length < 10) return;
+      if (!hamstersRef.current.length) return;
 
       const { bounds, options } = render;
       const currentTop = bounds.min.y;
       const height = options.height;
       
-      const highestY = Math.min(...hamstersRef.current.map(h => h.position.y));
+      const highestHamsterY = Math.min(...hamstersRef.current.map(h => h.position.y));
+      const lowestHamsterY = Math.max(...hamstersRef.current.map(h => h.position.y));
+      const stackHeight = lowestHamsterY - highestHamsterY;
 
-      const desiredCenterY = highestY + height * 0.35; 
+      if (stackHeight < height * 0.35 || hamstersRef.current.length < 9) return;
+
       const currentCenterY = currentTop + height / 2;
 
-      const smoothing = 0.08; 
-      const newCenterY = currentCenterY + (desiredCenterY - currentCenterY) * smoothing;
-
+      const smoothing = 0.01; 
+      const targetCenterY = highestHamsterY + height * 0.15;
+      const newCenterY = currentCenterY + (targetCenterY - currentCenterY) * smoothing;
+      
       const newTop = newCenterY - height / 2;
       bounds.min.y = newTop;
       bounds.max.y = newTop + height;
-
 
       Matter.Render.lookAt(render, {
         min: bounds.min,
@@ -186,11 +189,11 @@ const HamsterGame = () => {
           }
         }
 
-        if (((bodyA.label === 'hamster' && bodyB === leftWall || bodyB === rightWall)) || 
-        ((bodyB.label === 'hamster' && (bodyA === leftWall) || bodyA === rightWall))) {
+        if (((bodyA.label === 'hamster' && (bodyB === leftWall || bodyB === rightWall))) ||
+        ((bodyB.label === 'hamster' && (bodyA === leftWall || bodyA === rightWall)))) {
             const hamster = bodyA.label === 'hamster' ? bodyA : bodyB;
 
-            if (hamster != currentHamsterRef.current) {
+            if (hamster !== currentHamsterRef.current) {
               gameOverRef.current = true;
             }
             if (dropIntervalRef.current) clearInterval(dropIntervalRef.current);
@@ -198,13 +201,11 @@ const HamsterGame = () => {
             Matter.Runner.stop(engineRef.current);
           }
 
-        if (pair.bodyA.label === 'hamster' && pair.bodyB.label === 'hamster') {
-          const hamsterA = pair.bodyA;
-          const hamsterB = pair.bodyB;
+        if (bodyA.label === 'hamster' && bodyB.label === 'hamster') {;
 
-          if (!hamsterA.scored || !hamsterB.scored) {
-            hamsterA.scored = true;
-            hamsterB.scored = true;
+          if (!bodyA.scored || !bodyB.scored) {
+            bodyA.scored = true;
+            bodyB.scored = true;
             setScore(prev => prev + 100);
           }
         }
