@@ -135,7 +135,8 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
             <h3 style={{
               color: '#667eea',
               margin: '0 0 10px 0',
-              fontSize: isMobile ? '20px' : '24px'
+              fontSize: isMobile ? '20px' : '24px',
+              textAlign: 'center'
             }}>
               🎮 Game Over!
             </h3>
@@ -143,7 +144,8 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
               fontSize: isMobile ? '24px' : '32px',
               fontWeight: 'bold',
               color: '#333',
-              margin: '10px 0 20px 0'
+              margin: '10px 0 20px 0',
+              textAlign: 'center'
             }}>
               Your Score: {score}
             </p>
@@ -203,7 +205,7 @@ const Leaderboard = ({ score, onRestart, onSaveScore, showScoreInput = true }) =
             fontSize: isMobile ? '14px' : '16px'
           }}>
             <div>Ranking</div>
-            <div style={{ textAlign: 'middle' }}>Name</div>
+            <div>Name</div>
             <div style={{ textAlign: 'right' }}>Score</div>
           </div>
 
